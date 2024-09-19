@@ -36,6 +36,17 @@ class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _alt = TextEditingController();
   final TextEditingController _imc = TextEditingController();
   late int _count;
+  late String _result = "";
+  final Map<String, String> _imageDict = {
+    'MIII': 'img1.png',
+    'MII': 'img2.png',
+    'MI': 'img3.png',
+    'E': 'img4.png',
+    'PO': 'img5.png',
+    'OI': 'img6.png',
+    'OII': 'img7.png',
+    'OIIII': 'img8.png',
+  };
 
   double getValue(String text){
     try{    
@@ -51,6 +62,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final List<TextEditingController> _controllers = [_peso, _alt, _imc];
 
     _count = 0;
+    String assetPath = _imageDict['MIII']!;
 
     return Scaffold(
       appBar: AppBar(
@@ -62,15 +74,17 @@ class _MyHomePageState extends State<MyHomePage> {
         child: SingleChildScrollView(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            // crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              Image.asset("img1.png"),
+              Image.asset(assetPath),
               SizedBox(height: 10),
               _buildTextField('Peso', 'Digite o Peso', _controllers[0]),
               SizedBox(height: 10),
               _buildTextField('Altura', 'Digite a altura', _alt),
               SizedBox(height: 10),
-              _buildTextField('IMC', 'IMC Calculado', _imc),
+              Text(
+                _result,
+                style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+              ),
               SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -91,20 +105,44 @@ class _MyHomePageState extends State<MyHomePage> {
 
                       if(_count == 1) {
                         if(peso == 0 || altura == 0){
-                          print('Digite um valores válidos');
+                          setState(() {
+                            _result = 'Coloque valores válidos';
+                          });
                         }else{
-                          print(peso);
-                          print(altura);
                           double resultado = peso / (altura * altura);
-                      
-                          _controllers[2].text = resultado.toString();
+
+                          
+                          if(resultado >= 40){
+                            assetPath = _imageDict['OIII']!;
+                          }else if(resultado >= 35){
+                            assetPath = _imageDict['OII']!;
+                          }else if(resultado >= 30){
+                            assetPath = _imageDict['OI']!;
+                          }else if(resultado >= 25){
+                            assetPath = _imageDict['PO']!;
+                          }else if(resultado >= 18.5){
+                            assetPath = _imageDict['E']!;
+                          }else if(resultado >= 17){
+                            assetPath = _imageDict['MI']!;
+                          }else if(resultado >= 16){
+                            assetPath = _imageDict['MII']!;
+                          }else{
+                            assetPath = _imageDict['MIII']!;
+                          }
+
+                          setState(() {
+                            _result = 'O seu IMC é ${resultado.toStringAsFixed(2)}';
+                          });
+
                           _count == 0;
                         }
                       } else {
                         _count++;
                       }
                     }else{
-                      print('Digite um número válido');
+                      setState(() {
+                        _result = 'Coloque valores válidos';
+                      });
                     }
                   }, child: Text('Enter')),
                 ],
