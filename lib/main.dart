@@ -34,18 +34,23 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final TextEditingController _peso = TextEditingController();
   final TextEditingController _alt = TextEditingController();
-  final TextEditingController _imc = TextEditingController();
+
+  final FocusNode _focusNodePeso = FocusNode();
+  final FocusNode _focusNodeAltura = FocusNode();
+
+  String assetPath = "";
   late int _count;
   late String _result = "";
+  late String _status = "";
   final Map<String, String> _imageDict = {
     'MIII': 'img1.png',
     'MII': 'img2.png',
-    'MI': 'img3.png',
-    'E': 'img4.png',
-    'PO': 'img5.png',
-    'OI': 'img6.png',
-    'OII': 'img7.png',
-    'OIIII': 'img8.png',
+    'MI': 'img3.jpg',
+    'E': 'img4.jpg',
+    'PO': 'img5.jpg',
+    'OI': 'img6.jpg',
+    'OII': 'img7.jpg',
+    'OIII': 'img8.jpg',
   };
 
   double getValue(String text){
@@ -57,12 +62,43 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    assetPath = _imageDict['MIII']!;
+
+    _focusNodePeso.addListener(() {
+      if (_focusNodePeso.hasFocus) {
+        // Action when weight TextField gains focus
+        _count = 0;
+      }
+    });
+
+    _focusNodeAltura.addListener(() {
+      if (_focusNodeAltura.hasFocus) {
+        // Action when height TextField gains focus
+        _count = 1;
+      }
+    });
+  }
+
+  void _apagar() {
+    if (_count == 0) {
+      _peso.text = _peso.text.isNotEmpty
+          ? _peso.text.substring(0, _peso.text.length - 1)
+          : '';
+    } else {
+      _alt.text = _alt.text.isNotEmpty
+          ? _alt.text.substring(0, _alt.text.length - 1)
+          : '';
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     
-    final List<TextEditingController> _controllers = [_peso, _alt, _imc];
+    final List<TextEditingController> _controllers = [_peso, _alt];
 
     _count = 0;
-    String assetPath = _imageDict['MIII']!;
 
     return Scaffold(
       appBar: AppBar(
@@ -75,14 +111,18 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Image.asset(assetPath),
+              Image.asset(assetPath, width: 300, height: 400),
               SizedBox(height: 10),
-              _buildTextField('Peso', 'Digite o Peso', _controllers[0]),
+              _buildTextField('Peso', 'Digite o Peso', _controllers[0], _focusNodePeso),
               SizedBox(height: 10),
-              _buildTextField('Altura', 'Digite a altura', _alt),
+              _buildTextField('Altura', 'Digite a altura (cm)', _controllers[1], _focusNodeAltura),
               SizedBox(height: 10),
               Text(
                 _result,
+                style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                _status,
                 style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 10),
@@ -99,52 +139,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     _controllers[_count].text += '9';
                   }, child: Text('9')),
                   TextButton(onPressed: () {
-                    if(getValue(_controllers[_count].text) != 0){
-                      double? peso = getValue(_controllers[0].text);
-                      double? altura = getValue(_controllers[1].text);
-
-                      if(_count == 1) {
-                        if(peso == 0 || altura == 0){
-                          setState(() {
-                            _result = 'Coloque valores válidos';
-                          });
-                        }else{
-                          double resultado = peso / (altura * altura);
-
-                          
-                          if(resultado >= 40){
-                            assetPath = _imageDict['OIII']!;
-                          }else if(resultado >= 35){
-                            assetPath = _imageDict['OII']!;
-                          }else if(resultado >= 30){
-                            assetPath = _imageDict['OI']!;
-                          }else if(resultado >= 25){
-                            assetPath = _imageDict['PO']!;
-                          }else if(resultado >= 18.5){
-                            assetPath = _imageDict['E']!;
-                          }else if(resultado >= 17){
-                            assetPath = _imageDict['MI']!;
-                          }else if(resultado >= 16){
-                            assetPath = _imageDict['MII']!;
-                          }else{
-                            assetPath = _imageDict['MIII']!;
-                          }
-
-                          setState(() {
-                            _result = 'O seu IMC é ${resultado.toStringAsFixed(2)}';
-                          });
-
-                          _count == 0;
-                        }
-                      } else {
-                        _count++;
-                      }
-                    }else{
-                      setState(() {
-                        _result = 'Coloque valores válidos';
-                      });
-                    }
-                  }, child: Text('Enter')),
+                    _apagar();
+                  }, child: Text('⌫')),
                 ],
               ),
               Row(
@@ -181,32 +177,80 @@ class _MyHomePageState extends State<MyHomePage> {
                   }, child: Text('0')),
                 ],
               ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  TextButton(onPressed: () {
+                    if(getValue(_controllers[_count].text) != 0){
+                      double? peso = getValue(_controllers[0].text);
+                      double? altura = getValue(_controllers[1].text);
+
+                      if(peso < 0 || altura < 0){
+                        setState(() {
+                          _result = 'Coloque valores válidos';
+                        });
+                      }else{
+                        altura /= 100;
+                        double resultado = peso / (altura * altura);
+                        String status = "";
+
+                        setState(() {
+                          if(resultado >= 40){
+                            assetPath = _imageDict['OIII']!;
+                            _status = "Você está obeso";
+                          }else if(resultado >= 35){
+                            assetPath = _imageDict['OII']!;
+                            _status = "Você está obeso";
+                          }else if(resultado >= 30){
+                            assetPath = _imageDict['OI']!;
+                            _status = "Você está obeso";
+                          }else if(resultado >= 25){
+                            assetPath = _imageDict['PO']!;
+                            _status = "Você está pré-obeso";
+                          }else if(resultado >= 18.5){
+                            assetPath = _imageDict['E']!;
+                            _status = "Você está no peso ideal";
+                          }else if(resultado >= 17){
+                            assetPath = _imageDict['MI']!;
+                            _status = "Você está magro";
+                          }else if(resultado >= 16){
+                            assetPath = _imageDict['MII']!;
+                            _status = "Você está magro";
+                          }else{
+                            assetPath = _imageDict['MIII']!;
+                            _status = "Você está muito magro";
+                          }
+
+                          _result = 'O seu IMC é ${resultado.toStringAsFixed(2)}';
+                        });
+
+                        _count == 0;
+                      }
+                    }else{
+                      setState(() {
+                        _result = 'Coloque valores válidos';
+                      });
+                    }
+                  }, child: Text('Calcular')),
+                ],
+              ),
             ]
           ),
         )
       ),
-      // endDrawer: Drawer(
-      //   child: Icon(Icons.code)
-      // ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: _incrementCounter,
-      //   tooltip: 'Increment',
-      //   child: const Icon(Icons.add),
-      // ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 
   void dispose() {
-    // Dispose of the controller when the widget is disposed
-    // _controller.dispose();
     super.dispose();
   }
 
-  Widget _buildTextField(String label, String hint, TextEditingController controller){
+  Widget _buildTextField(String label, String hint, TextEditingController controller, FocusNode focusNode){
     return Container(
       width: 300,
       child: TextField(
         controller: controller,
+        focusNode: focusNode,
         keyboardType: TextInputType.number,
         style: TextStyle(height: 2.0),
         decoration: InputDecoration(
